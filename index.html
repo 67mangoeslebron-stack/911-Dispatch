@@ -2,175 +2,259 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>911 Dispatch V130 - Free Tier Fix</title>
+    <title>911 Dispatch V137 - Realistic Radio FX</title>
     <style>
-        :root { --bg: #020617; --panel: #1e293b; --accent: #38bdf8; --red: #ef4444; --gold: #eab308; --text: #f1f5f9; }
+        :root { --bg: #020617; --panel: #0f172a; --accent: #38bdf8; --red: #ef4444; --gold: #eab308; --text: #f1f5f9; --green: #22c55e; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; height: 100vh; display: flex; overflow: hidden; }
-        .map-area { flex: 2; position: relative; background: #000; border-right: 2px solid #334155; }
+        
+        /* LEFT SIDE: MAP */
+        .map-area { flex: 2; position: relative; background: #000510; border-right: 3px solid #334155; overflow: hidden; }
         canvas { display: block; width: 100%; height: 100%; }
-        .cad-area { flex: 1; display: flex; flex-direction: column; min-width: 450px; background: var(--panel); }
-        .header { background: #0f172a; padding: 15px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; }
+        .map-overlay { position: absolute; bottom: 20px; left: 20px; color: var(--accent); font-size: 12px; pointer-events: none; }
+
+        /* RIGHT SIDE: CAD SYSTEM */
+        .cad-area { flex: 1; display: flex; flex-direction: column; min-width: 450px; background: var(--panel); border-left: 1px solid #1e293b; }
+        
+        .header { background: #1e293b; padding: 15px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5); }
+        .title { font-weight: 900; font-size: 18px; letter-spacing: 1px; color: var(--accent); }
+        
         .log { flex: 1; background: #000; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid #334155; }
-        .msg { padding: 8px 12px; border-radius: 4px; max-width: 85%; font-size: 14px; }
-        .msg.caller { align-self: flex-start; background: #310000; border-left: 4px solid var(--red); }
-        .msg.radio { align-self: flex-start; background: #1e1b4b; border-left: 4px solid var(--gold); color: var(--gold); }
-        .msg.disp { align-self: flex-end; background: #0c4a6e; border-right: 4px solid var(--accent); }
-        .msg.sys { align-self: center; font-size: 11px; color: #64748b; font-style: italic; }
-        .unit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; background: #0f172a; }
-        .u-btn { padding: 10px; background: #334155; border: 1px solid #475569; color: white; cursor: pointer; text-align: left; font-size: 11px; }
-        .u-btn.selected { border-color: var(--gold); background: #422006; }
-        .input-bar { padding: 15px; background: #1e293b; display: flex; flex-direction: column; gap: 10px; }
-        input { background: #0f172a; border: 1px solid #475569; color: white; padding: 10px; font-family: monospace; text-transform: uppercase; }
-        .action-btn { background: var(--accent); color: black; border: none; padding: 10px; font-weight: bold; cursor: pointer; }
-        .mic-btn { padding: 10px; background: #334155; color: white; border: none; cursor: pointer; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .mic-btn.active { background: var(--red); box-shadow: 0 0 10px var(--red); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        .msg { padding: 8px 12px; border-radius: 4px; max-width: 85%; font-size: 13px; line-height: 1.4; animation: fadeIn 0.3s ease; }
+        .msg.caller { align-self: flex-start; background: #450a0a; border-left: 4px solid var(--red); color: #fecaca; }
+        .msg.radio { align-self: flex-start; background: #172554; border-left: 4px solid var(--gold); color: #bfdbfe; font-family: 'Consolas', monospace; letter-spacing: -0.5px; }
+        .msg.disp { align-self: flex-end; background: #0f172a; border-right: 4px solid var(--accent); color: #e2e8f0; text-align: right; }
+        .msg.sys { align-self: center; font-size: 11px; color: #64748b; font-style: italic; background: transparent; border: none; }
+        
+        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+
+        .controls { padding: 15px; background: #1e293b; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #334155; }
+        
+        /* UNIT GRID */
+        .unit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .u-btn { padding: 12px; background: #334155; border: 1px solid #475569; color: #cbd5e1; cursor: pointer; font-size: 12px; font-weight: bold; transition: all 0.2s; text-align: center; }
+        .u-btn:hover { background: #475569; }
+        .u-btn.selected { border-color: var(--gold); background: #422006; color: var(--gold); box-shadow: inset 0 0 10px rgba(234, 179, 8, 0.2); }
+
+        /* INPUTS */
+        .input-row { display: flex; gap: 8px; }
+        input { background: #0f172a; border: 1px solid #475569; color: white; padding: 12px; font-family: monospace; text-transform: uppercase; flex: 1; outline: none; transition: border 0.2s; }
+        input:focus { border-color: var(--accent); }
+        
+        button { border: none; cursor: pointer; font-weight: bold; font-family: inherit; transition: all 0.2s; }
+        .action-btn { padding: 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-green { background: var(--green); color: black; }
+        .btn-green:hover { background: #4ade80; }
+        .btn-gold { background: var(--gold); color: black; opacity: 0.5; cursor: not-allowed; }
+        .btn-gold.active { opacity: 1; cursor: pointer; }
+        .btn-gold.active:hover { background: #facc15; }
+        .btn-blue { background: #3b82f6; color: white; width: 100%; margin-top: 5px; }
+
+        .mic-btn { width: 40px; height: 40px; border-radius: 50%; background: #334155; color: white; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+        .mic-btn.active { background: var(--red); box-shadow: 0 0 15px var(--red); animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
 
-<div class="map-area"><canvas id="map-canvas"></canvas></div>
+<div class="map-area">
+    <canvas id="map-canvas"></canvas>
+    <div class="map-overlay">
+        <div>METRO CAD MAP V2.0</div>
+        <div id="coords">LAT: -- LON: --</div>
+    </div>
+</div>
 
 <div class="cad-area">
     <div class="header">
-        <div style="font-weight:bold;">METRO DISPATCH V130</div>
+        <div class="title">METRO DISPATCH V137</div>
         <button id="mic-toggle" class="mic-btn" onclick="toggleMic()">🎙️</button>
     </div>
 
     <div class="log" id="log">
-        <div class="msg sys">SYSTEM READY. CLICK MAP THEN CLICK FORCE START.</div>
+        <div class="msg sys">LOADING AUDIO FX...</div>
     </div>
 
-    <div class="unit-grid" id="unit-grid">
-        <div class="u-btn" id="PD-01" onclick="selectUnit('PD-01')">PD-01 (Patrol)</div>
-        <div class="u-btn" id="EAGLE-1" onclick="selectUnit('EAGLE-1')">EAGLE-1 (Air PD)</div>
-        <div class="u-btn" id="ENGINE-5" onclick="selectUnit('ENGINE-5')">ENGINE-5 (Fire)</div>
-        <div class="u-btn" id="MEDIC-2" onclick="selectUnit('MEDIC-2')">MEDIC-2 (EMS)</div>
-    </div>
-
-    <div class="input-bar">
-        <div style="font-size:10px; color:#94a3b8; font-weight:bold;">LOCATION VERIFICATION:</div>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="inp-addr" placeholder="TYPE ADDRESS..." style="flex:1;">
-            <button class="action-btn" onclick="verifyAddress()" style="background:var(--green); color:white; padding: 0 10px;">LOCK</button>
+    <div class="controls">
+        <div class="unit-grid">
+            <div class="u-btn" id="PD-01" onclick="selectUnit('PD-01')">🚓 PD-01 PATROL</div>
+            <div class="u-btn" id="PD-05" onclick="selectUnit('PD-05')">🚓 PD-05 K9 UNIT</div>
+            <div class="u-btn" id="MEDIC-1" onclick="selectUnit('MEDIC-1')">🚑 MEDIC-1 EMS</div>
+            <div class="u-btn" id="FIRE-3" onclick="selectUnit('FIRE-3')">🚒 FIRE-3 ENGINE</div>
         </div>
-        <button id="disp-btn" class="action-btn" style="background:var(--gold); opacity:0.4;" onclick="dispatch()" disabled>TRANSMIT DISPATCH</button>
-        <button class="action-btn" onclick="manualStart()" style="background:#334155; color:#fff; font-size:10px;">FORCE START CALL</button>
+
+        <div class="input-row">
+            <input type="text" id="inp-addr" placeholder="ENTER VERIFIED ADDRESS">
+            <button class="action-btn btn-green" onclick="verifyAddress()">LOCATE</button>
+        </div>
+
+        <button id="disp-btn" class="action-btn btn-gold" onclick="dispatch()" disabled>TRANSMIT DISPATCH</button>
+
+        <button class="action-btn btn-blue" onclick="nextCall()">📞 RECEIVE NEXT CALL (RANDOM)</button>
     </div>
 </div>
 
 <script>
-    const CONFIG = {
-        apiKey: "sk_98138d8a2c18e25e0126f3d7ab0750fbcb527ee3c78c977a",
-        voiceId: "FGY2WhTYpPnrIDTdsKH5"
-    };
+    // --- CALL SCENARIOS ---
+    const SCENARIOS = [
+        {
+            type: "DOMESTIC",
+            addr: "4402 OAKWOOD DRIVE",
+            intro: "He's breaking everything! I locked myself in the bathroom! Send help!",
+            details: "My husband! He's drunk and he has a bat! 4402 Oakwood Drive!",
+            mapX: 0.3, mapY: 0.4 
+        },
+        {
+            type: "FIRE",
+            addr: "89 INDUSTRIAL PARKWAY",
+            intro: "I see smoke coming from the warehouse! It's getting black!",
+            details: "It's the old textile factory at 89 Industrial Parkway. I think there are people inside!",
+            mapX: 0.7, mapY: 0.2
+        },
+        {
+            type: "MEDICAL",
+            addr: "212 SUNSET BLVD",
+            intro: "My dad just collapsed, he's not breathing! Oh god!",
+            details: "We are at 212 Sunset Blvd, apartment 4B. Please hurry, he's turning blue!",
+            mapX: 0.5, mapY: 0.6
+        },
+        {
+            type: "SUSPICIOUS",
+            addr: "1500 MAIN STREET",
+            intro: "There's a guy with a knife screaming at people near the bank.",
+            details: "He's at 1500 Main Street, right in front of the ATM. He looks unstable.",
+            mapX: 0.2, mapY: 0.8
+        }
+    ];
 
-    let activeCall = { addr: "1505 CLEAVELAND WAY", intro: "Hello? My son isn't home! It's been 12 hours, please help!" };
+    let currentCall = null;
     let selectedUnit = null;
-    let verified = false;
+    let mapTarget = null;
     let micActive = false;
+    let voices = [];
     const synth = window.speechSynthesis;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // --- SPEECH RECOGNITION ---
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-
-    recognition.onresult = (event) => {
-        const transcript = event.results[event.results.length - 1][0].transcript;
-        handleInput(transcript);
-    };
-    recognition.onerror = () => { console.log("Mic error, restarting..."); };
-    recognition.onend = () => { if(micActive) recognition.start(); };
-
-    function toggleMic() {
-        const btn = document.getElementById('mic-toggle');
-        if (!micActive) {
-            try { recognition.start(); } catch(e){}
-            micActive = true;
-            btn.classList.add('active');
-            addMsg('sys', "MICROPHONE LIVE");
-        } else {
-            recognition.stop();
-            micActive = false;
-            btn.classList.remove('active');
-            addMsg('sys', "MICROPHONE MUTED");
+    // --- VOICE SETUP ---
+    function loadVoices() {
+        voices = synth.getVoices();
+        if(voices.length > 0) {
+            addMsg('sys', "AUDIO SYSTEM READY. CLICK NEXT CALL.");
         }
     }
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
 
-    async function speakEleven(text) {
-        addMsg('sys', "Contacting ElevenLabs...");
-        try {
-            const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${CONFIG.voiceId}`, {
-                method: 'POST',
-                headers: { 
-                    'xi-api-key': CONFIG.apiKey, 
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify({ 
-                    text: text, 
-                    model_id: "eleven_turbo_v2_5", // UPDATED TO NEW FREE MODEL
-                    voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-                })
-            });
-
-            if (!response.ok) {
-                const errData = await response.json();
-                console.error("ElevenLabs Error:", errData);
-                addMsg('sys', `API ERROR: ${errData.detail?.message || "Check Key Permissions"}`);
-                fallbackSpeak(text); 
-                return;
-            }
-
-            const blob = await response.blob();
-            const audio = new Audio(URL.createObjectURL(blob));
-            audio.play();
-        } catch (e) {
-            console.error(e);
-            addMsg('sys', "CONNECTION FAILED. USING BACKUP VOICE.");
-            fallbackSpeak(text);
+    function getBestVoice(isRadio) {
+        if (!voices.length) return null;
+        const priorities = ["Google US English", "Microsoft Zira", "Samantha", "Google UK English Female"];
+        for (let name of priorities) {
+            const found = voices.find(v => v.name.includes(name));
+            if (found) return found;
         }
+        return voices.find(v => v.lang.includes('en')) || voices[0];
     }
 
-    function fallbackSpeak(text) {
-        const ut = new SpeechSynthesisUtterance(text);
-        synth.speak(ut);
-    }
-
-    function playRadio(text) {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.15, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        const gain = audioCtx.createGain();
-        gain.gain.value = 0.05;
-        source.connect(gain); gain.connect(audioCtx.destination);
-        source.start();
-
-        const ut = new SpeechSynthesisUtterance(text);
-        ut.rate = 1.1; ut.pitch = 0.8;
-        synth.speak(ut);
-    }
-
-    function handleInput(text) {
-        addMsg('disp', text);
-        const lower = text.toLowerCase();
+    function speak(text, isRadio = false) {
+        if (synth.speaking) synth.cancel();
         
-        if (lower.includes("location") || lower.includes("where") || lower.includes("address")) {
-            setTimeout(() => {
-                const r = "I'm at 1505 Cleaveland Way! Where is the officer?";
-                addMsg('caller', r);
-                speakEleven(r);
-            }, 1000);
-        } else if (lower.includes("name") || lower.includes("who")) {
-            setTimeout(() => {
-                const r = "His name is Marcus. He's only 14!";
-                addMsg('caller', r);
-                speakEleven(r);
-            }, 1000);
+        const ut = new SpeechSynthesisUtterance(text);
+        const bestVoice = getBestVoice(isRadio);
+        if (bestVoice) ut.voice = bestVoice;
+
+        if (isRadio) {
+            // RADIO FX SETTINGS
+            ut.pitch = 0.6;   // Deeper
+            ut.rate = 1.3;    // Faster
+            ut.volume = 1.0;
+            
+            // Calculate approximate duration of speech to match static
+            const duration = (text.split(' ').length / 2) * 1000; 
+            playRadioBurst(duration);
+        } else {
+            // CALLER SETTINGS
+            ut.pitch = 1.2; 
+            ut.rate = 1.05;
+        }
+        synth.speak(ut);
+    }
+
+    function playRadioBurst(durationMs) {
+        // 1. Initial SQUAK (The "Click")
+        createNoise(0.2, 0.4); 
+
+        // 2. Background Static (The "Hiss" while talking)
+        setTimeout(() => {
+            createNoise(durationMs / 1000, 0.15); // Quieter, sustained
+        }, 200);
+
+        // 3. Ending SQUAK (The "Release")
+        setTimeout(() => {
+            createNoise(0.2, 0.4);
+        }, durationMs + 200);
+    }
+
+    function createNoise(duration, vol) {
+        const bufferSize = audioCtx.sampleRate * duration;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        for (let i = 0; i < bufferSize; i++) {
+            // White noise generation
+            data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = vol;
+
+        // Bandpass filter to make it sound like a cheap radio speaker
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1000;
+
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        noise.start();
+    }
+
+    // --- GAME LOGIC ---
+    function nextCall() {
+        if (audioCtx.state === 'suspended') audioCtx.resume(); // Unlock audio engine
+        currentCall = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)];
+        
+        mapTarget = null;
+        document.getElementById('inp-addr').value = "";
+        document.getElementById('disp-btn').className = "action-btn btn-gold";
+        document.getElementById('disp-btn').disabled = true;
+        document.querySelectorAll('.u-btn').forEach(b => b.classList.remove('selected'));
+        selectedUnit = null;
+
+        addMsg('sys', `INCOMING CALL... [${currentCall.type}]`);
+        setTimeout(() => {
+            addMsg('caller', currentCall.intro);
+            speak(currentCall.intro);
+        }, 1000);
+    }
+
+    function verifyAddress() {
+        const input = document.getElementById('inp-addr').value.toUpperCase();
+        if (!currentCall) return;
+
+        const correct = currentCall.addr.toUpperCase();
+        if (input.length > 5 && (correct.includes(input) || input.includes(correct.split(' ')[1]))) {
+            addMsg('sys', `LOCATION VERIFIED: ${currentCall.addr}`);
+            mapTarget = { x: currentCall.mapX, y: currentCall.mapY };
+            checkReady();
+        } else {
+            addMsg('sys', "INVALID ADDRESS. ASK CALLER FOR LOCATION.");
         }
     }
 
@@ -181,56 +265,125 @@
         checkReady();
     }
 
-    function verifyAddress() {
-        const val = document.getElementById('inp-addr').value.toUpperCase();
-        if(val.includes("1505") || val.includes("CLEAVELAND")) {
-            verified = true;
-            addMsg('sys', "LOCATION LOCKED: 1505 CLEAVELAND WAY");
-            checkReady();
-        }
-    }
-
     function checkReady() {
-        if(verified && selectedUnit) {
-            const b = document.getElementById('disp-btn');
-            b.disabled = false; b.style.opacity = "1";
+        if (mapTarget && selectedUnit) {
+            const btn = document.getElementById('disp-btn');
+            btn.className = "action-btn btn-gold active";
+            btn.disabled = false;
         }
     }
 
     function dispatch() {
-        const m = `${selectedUnit} copies. En route to Cleaveland Way.`;
-        addMsg('radio', `[${selectedUnit}] ${m}`);
-        playRadio(m);
+        if (!selectedUnit) return;
+        const msg = `${selectedUnit} copies. En route to ${currentCall.addr}.`; // Shortened for realism
+        addMsg('radio', msg);
+        speak(msg, true); // Use Radio Voice
+        
         document.getElementById('disp-btn').disabled = true;
-        document.getElementById('disp-btn').style.opacity = "0.4";
+        document.getElementById('disp-btn').className = "action-btn btn-gold";
+        addMsg('sys', "UNIT DISPATCHED. GOOD JOB.");
     }
 
     function addMsg(type, text) {
-        const l = document.getElementById('log');
-        const d = document.createElement('div');
-        d.className = `msg ${type}`;
-        d.innerText = text;
-        l.appendChild(d);
-        l.scrollTop = l.scrollHeight;
+        const log = document.getElementById('log');
+        const div = document.createElement('div');
+        div.className = `msg ${type}`;
+        div.innerText = text;
+        log.appendChild(div);
+        log.scrollTop = log.scrollHeight;
     }
 
-    function manualStart() {
-        addMsg('caller', activeCall.intro);
-        speakEleven(activeCall.intro);
+    // --- MIC LOGIC ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+        const text = event.results[event.results.length - 1][0].transcript;
+        addMsg('disp', text);
+        processVoice(text);
+    };
+    
+    function toggleMic() {
+        const btn = document.getElementById('mic-toggle');
+        if (!micActive) {
+            try { recognition.start(); } catch(e){}
+            micActive = true;
+            btn.classList.add('active');
+        } else {
+            recognition.stop();
+            micActive = false;
+            btn.classList.remove('active');
+        }
     }
 
-    // Map Setup
+    function processVoice(text) {
+        if (!currentCall) return;
+        const lower = text.toLowerCase();
+        
+        if (lower.includes("where") || lower.includes("address") || lower.includes("location")) {
+            setTimeout(() => {
+                addMsg('caller', currentCall.details);
+                speak(currentCall.details);
+            }, 1000);
+        }
+        else if (lower.includes("what") || lower.includes("happened") || lower.includes("emergency")) {
+            setTimeout(() => {
+                addMsg('caller', currentCall.intro);
+                speak(currentCall.intro);
+            }, 1000);
+        }
+    }
+
+    // --- MAP SYSTEM ---
     const canvas = document.getElementById('map-canvas');
     const ctx = canvas.getContext('2d');
-    function draw() {
-        canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
-        ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    let radarAngle = 0;
+
+    function drawMap() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        const w = canvas.width; 
+        const h = canvas.height;
+
+        ctx.fillStyle = "#000510";
+        ctx.fillRect(0, 0, w, h);
+
         ctx.strokeStyle = "#1e293b";
-        for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
-        for(let i=0; i<canvas.height; i+=40) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke(); }
-        requestAnimationFrame(draw);
+        ctx.lineWidth = 1;
+        for(let x=0; x<w; x+=50) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+        for(let y=0; y<h; y+=50) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+
+        radarAngle += 0.02;
+        ctx.strokeStyle = "rgba(56, 189, 248, 0.3)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(w/2, h/2);
+        ctx.lineTo(w/2 + Math.cos(radarAngle)*w, h/2 + Math.sin(radarAngle)*h);
+        ctx.stroke();
+
+        if (mapTarget) {
+            const tx = mapTarget.x * w;
+            const ty = mapTarget.y * h;
+            
+            ctx.fillStyle = "#ef4444";
+            ctx.beginPath();
+            ctx.arc(tx, ty, 6, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.strokeStyle = `rgba(239, 68, 68, ${Math.abs(Math.sin(Date.now()/300))})`;
+            ctx.beginPath();
+            ctx.arc(tx, ty, 15, 0, Math.PI*2);
+            ctx.stroke();
+            
+            ctx.fillStyle = "#fff";
+            ctx.font = "12px monospace";
+            ctx.fillText("INCIDENT", tx + 10, ty);
+        }
+        requestAnimationFrame(drawMap);
     }
-    draw();
+    drawMap(); 
 </script>
 </body>
 </html>
