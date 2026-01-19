@@ -1,125 +1,69 @@
-/* style.css - V146 SECTOR COMMAND */
 :root { 
-    --bg: #0d1117; 
-    --panel: #161b22; 
-    --border: #30363d; 
-    --highlight: #58a6ff; 
-    --alert: #d2a8ff; 
-    --text: #c9d1d9;
-    --terminal-green: #3fb950;
-    --sms-blue: #1e90ff;
+    --bg: #050505; 
+    --term: #00ff41; 
+    --dim: #004411; 
+    --alert: #ff3333; 
+    --road: #1a1a1a;
+    --hwy: #2a2a2a;
 }
 
 body { 
-    margin: 0; background: var(--bg); color: var(--text); 
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-    height: 100vh; overflow: hidden; font-size: 13px;
-    user-select: none;
+    margin: 0; background: var(--bg); color: var(--term); 
+    font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; 
+    text-transform: uppercase; user-select: none;
 }
 
-/* FULL SCREEN OVERLAYS */
-.overlay-screen {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: #0d1117; z-index: 999;
-    display: flex; flex-direction: column; 
-    justify-content: center; align-items: center;
-}
-.hidden { display: none !important; }
+.container { display: grid; grid-template-columns: 350px 1fr 300px; height: 100%; }
+.panel, .panel-right { padding: 15px; border-right: 1px solid var(--dim); display: flex; flex-direction: column; background: #000900; }
+.panel-right { border-left: 1px solid var(--dim); border-right: none; }
 
-.login-box {
-    border: 1px solid var(--border); padding: 40px; background: var(--panel);
-    text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 300px;
-}
-.big-btn {
-    background: var(--highlight); color: white; border: none;
-    padding: 15px 30px; font-size: 16px; font-weight: bold;
-    cursor: pointer; margin-top: 20px; width: 100%; border-radius: 4px;
-}
-.big-btn:hover { background: #79c0ff; }
-
-/* MAIN LAYOUT */
-.container { display: grid; grid-template-columns: 320px 1fr 320px; width: 100%; height: 100%; }
-.panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--panel); }
-.panel-right { border-left: 1px solid var(--border); background: var(--panel); }
-
-/* HEADER */
-.header { 
-    background: #010409; padding: 12px; border-bottom: 1px solid var(--border); 
-    display: flex; justify-content: space-between; align-items: center;
-    font-weight: 600; font-family: 'Courier New', monospace;
-}
-.clock { color: var(--highlight); font-size: 14px; }
-
-/* MAP AREA */
-.map-wrapper { position: relative; flex: 1; background: #050505; overflow: hidden; }
+/* MAP & VIGNETTE */
+.map-wrapper { position: relative; background: #080808; overflow: hidden; cursor: crosshair; }
 canvas { display: block; width: 100%; height: 100%; }
-
-/* VIGNETTE (Circular Focus) */
 .vignette {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle, transparent 55%, #050505 100%);
-    pointer-events: none;
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(circle, transparent 50%, #000 95%);
+    box-shadow: inset 0 0 100px #000;
+}
+.scan-line {
+    position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+    background: rgba(0, 255, 65, 0.1);
+    animation: scan 4s linear infinite; pointer-events: none;
 }
 
-/* INCOMING CALL MODULE */
-.call-module {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: #1f2428; border: 2px solid var(--alert);
-    padding: 20px; text-align: center; width: 300px;
-    box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    display: none; z-index: 100;
+/* UI ELEMENTS */
+.header { border-bottom: 2px solid var(--dim); padding-bottom: 5px; margin-bottom: 10px; font-weight: bold; display: flex; justify-content: space-between; }
+.unit-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--dim); }
+.unit-row.busy { color: #aaaaaa; }
+.unit-row.enroute { color: var(--alert); animation: pulse 2s infinite; }
+
+/* SMS INTERFACE */
+#sms-interface { margin-top: 10px; border: 1px solid var(--dim); padding: 5px; height: 150px; display: flex; flex-direction: column; }
+#sms-history { flex: 1; overflow-y: auto; font-size: 11px; color: cyan; margin-bottom: 5px; }
+#sms-input { background: #000; border: none; border-top: 1px solid var(--dim); color: var(--term); padding: 5px; font-family: inherit; }
+
+/* MIC VIZ */
+.mic-viz {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: rgba(0, 20, 0, 0.9); border: 1px solid var(--term);
+    padding: 10px; text-align: center; border-radius: 4px; z-index: 100;
 }
-.module-header { color: var(--alert); font-weight: bold; margin-bottom: 10px; animation: flash 1s infinite; }
-.module-btn { 
-    background: var(--alert); color: black; border: none; 
-    padding: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; 
-}
+.freq-bars { display: flex; gap: 3px; height: 20px; justify-content: center; margin-top: 5px; }
+.bar { width: 5px; background: var(--term); height: 100%; animation: wave 0.5s infinite; }
 
-/* DATA DISPLAY */
-.data-row { padding: 10px 15px; border-bottom: 1px solid var(--border); }
-.lbl { display: block; font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 4px; }
-.val { font-size: 14px; color: #fff; font-weight: 500; }
-.val.active { color: var(--alert); }
+/* LOGS */
+.log { flex: 1; overflow-y: auto; font-size: 12px; }
+.msg { margin-bottom: 4px; padding-left: 5px; border-left: 2px solid transparent; }
+.msg.sys { color: #666; }
+.msg.radio { border-color: var(--term); color: var(--term); }
+.msg.call { border-color: var(--alert); color: #fff; }
 
-/* DIGITAL WIDGET (Computer Note) */
-.digital-widget {
-    background: #0d1117; border: 1px solid var(--border);
-    padding: 10px; margin: 15px; font-family: 'Courier New', monospace;
-    font-size: 11px; color: var(--terminal-green);
-    border-left: 3px solid var(--terminal-green);
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-}
+.hidden { display: none !important; }
+.overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+.login-box { text-align: center; border: 2px solid var(--term); padding: 40px; }
+.big-btn { background: var(--term); border: none; padding: 15px 30px; font-weight: bold; font-size: 18px; margin-top: 20px; cursor: pointer; }
+.big-btn:hover { background: #fff; }
 
-/* CONTROLS */
-.controls { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-.unit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.u-btn { 
-    background: #21262d; border: 1px solid var(--border); 
-    color: #c9d1d9; padding: 10px; cursor: pointer; 
-    text-align: left; font-size: 11px; border-radius: 4px;
-}
-.u-btn:hover { background: #30363d; }
-.u-btn.selected { background: #1f6feb; color: white; border-color: #58a6ff; }
-
-.action-btn { 
-    background: #238636; color: white; border: none; padding: 12px; 
-    border-radius: 4px; font-weight: bold; cursor: pointer; 
-}
-.action-btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
-
-.mic-btn { 
-    width: 30px; height: 30px; border-radius: 50%; background: #21262d; 
-    border: 1px solid var(--border); color: #484f58; cursor: pointer;
-    display: flex; justify-content: center; align-items: center;
-}
-.mic-btn.active { background: var(--alert); color: black; animation: pulse 1.5s infinite; }
-
-/* CHAT LOG */
-.chat-log { flex: 1; overflow-y: auto; padding: 10px; font-family: 'Courier New', monospace; font-size: 12px; }
-.msg { margin-bottom: 6px; border-bottom: 1px solid #21262d; padding-bottom: 2px; }
-.msg.sys { color: #8b949e; font-style: italic; }
-.msg.radio { color: var(--highlight); }
-.msg.sms { color: var(--sms-blue); border-left: 3px solid var(--sms-blue); padding-left: 5px; }
-
-@keyframes flash { 50% { opacity: 0.5; } }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(210, 168, 255, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(210, 168, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(210, 168, 255, 0); } }
+@keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+@keyframes pulse { 50% { opacity: 0.5; } }
+@keyframes wave { 0%, 100% { height: 20%; } 50% { height: 100%; } }
