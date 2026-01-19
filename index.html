@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>911 Dispatch V129 - FINAL FIX</title>
+    <title>911 Dispatch V130 - Free Tier Fix</title>
     <style>
         :root { --bg: #020617; --panel: #1e293b; --accent: #38bdf8; --red: #ef4444; --gold: #eab308; --text: #f1f5f9; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; height: 100vh; display: flex; overflow: hidden; }
@@ -33,7 +33,7 @@
 
 <div class="cad-area">
     <div class="header">
-        <div style="font-weight:bold;">METRO DISPATCH V129</div>
+        <div style="font-weight:bold;">METRO DISPATCH V130</div>
         <button id="mic-toggle" class="mic-btn" onclick="toggleMic()">🎙️</button>
     </div>
 
@@ -110,7 +110,7 @@
                 },
                 body: JSON.stringify({ 
                     text: text, 
-                    model_id: "eleven_monolingual_v1",
+                    model_id: "eleven_turbo_v2_5", // CHANGED TO TURBO V2.5 (FREE TIER)
                     voice_settings: { stability: 0.5, similarity_boost: 0.75 }
                 })
             });
