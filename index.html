@@ -2,94 +2,109 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SECTOR COMMAND V146</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON SECTOR // V148</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="start-screen" class="overlay-screen">
-    <div class="login-box">
-        <h2 style="color:var(--highlight);">CAD LOGIN</h2>
-        <div>SECTOR 4 - SOUTH</div>
-        <button class="big-btn" onclick="startGame()">START SHIFT</button>
-    </div>
-</div>
-
-<div id="end-screen" class="overlay-screen hidden">
-    <div class="login-box">
-        <h2 style="color:var(--terminal-green);">SHIFT COMPLETE</h2>
-        <div>TOTAL INCIDENTS: <span id="total-calls">0</span></div>
-        <button class="big-btn" onclick="location.reload()">LOGOUT</button>
-    </div>
-</div>
-
-<div id="call-modal" class="call-module">
-    <div class="module-header">⚠️ INCOMING ALERT ⚠️</div>
-    <div>PRIORITY LINE 1 RINGING</div>
-    <button class="module-btn" onclick="acceptCall()">ANSWER</button>
-</div>
-
-<div class="container">
-    <div class="panel">
-        <div class="header">
-            <span>INCIDENT BOARD</span>
-            <span id="clock-display" class="clock">00:00</span>
-        </div>
-        
-        <div class="data-row">
-            <span class="lbl">TYPE CODE</span>
-            <span id="c-type" class="val">--</span>
-        </div>
-        <div class="data-row">
-            <span class="lbl">PRIORITY</span>
-            <span id="c-pri" class="val">--</span>
-        </div>
-        <div class="data-row">
-            <span class="lbl">LOCATION</span>
-            <span id="c-addr" class="val active">--</span>
-        </div>
-
-        <div class="digital-widget">
-            > SYSTEM NOTES:<br>
-            - Construction on Broadway.<br>
-            - Unit PD-04 is OOS.<br>
-            - Check SMS queue freq.
-        </div>
-        
-        <div style="margin-top:auto; padding:15px;">
-            <button class="action-btn" style="width:100%; background:#21262d; border:1px solid #30363d;" onclick="triggerCall()">SIMULATE ALERT (F9)</button>
-            <button class="action-btn" style="width:100%; margin-top:5px; background:var(--alert); color:black;" onclick="endShift()">END SHIFT</button>
+    <div id="boot-screen" class="overlay">
+        <div class="login-box">
+            <h1 class="glitch" data-text="SECTOR 4">SECTOR 4</h1>
+            <p>CAD SYSTEM V148.2</p>
+            <div class="warning-box">
+                WARNING: AUDIO DRIVERS UNSTABLE.<br>
+                VERIFY ADDRESS VISUALLY.<br>
+                USE VOICE COMMANDS TO DISPATCH.
+            </div>
+            <button class="big-btn" onclick="initSystem()">INITIALIZE SHIFT</button>
         </div>
     </div>
 
-    <div class="map-wrapper">
-        <canvas id="map-canvas"></canvas>
-        <div class="vignette"></div>
-    </div>
+    <div class="container">
+        <div class="panel">
+            <div class="header">
+                <span>INCIDENT DATA</span>
+                <span id="clock" class="terminal-green">19:42:00</span>
+            </div>
 
-    <div class="panel-right">
-        <div class="header">
-            <span>COMMS & UNITS</span>
-            <button id="mic-btn" class="mic-btn" onclick="toggleMic()">🎙️</button>
+            <div id="active-call-box" class="call-box hidden">
+                <div class="data-row">
+                    <span class="lbl">SOURCE</span>
+                    <span id="c-source" class="val">--</span>
+                </div>
+                <div class="data-row">
+                    <span class="lbl">LOCATION</span>
+                    <span id="c-loc" class="val flash-slow">LOCATING...</span>
+                </div>
+                <div class="data-row">
+                    <span class="lbl">DETAILS</span>
+                    <div id="c-details" class="log-text">--</div>
+                </div>
+                <hr class="dim">
+                <div id="sms-interface" class="hidden">
+                    <div id="sms-history"></div>
+                    <input type="text" id="sms-input" placeholder="TYPE RESPONSE..." disabled>
+                </div>
+            </div>
+
+            <div class="status-panel">
+                <div class="header">UNIT STATUS</div>
+                <div class="unit-row" id="u-pd1">
+                    <span class="u-name">PD-01</span>
+                    <span class="u-stat">PATROL</span>
+                </div>
+                <div class="unit-row" id="u-pd2">
+                    <span class="u-name">PD-02</span>
+                    <span class="u-stat">PATROL</span>
+                </div>
+                <div class="unit-row" id="u-med1">
+                    <span class="u-name">MED-1</span>
+                    <span class="u-stat">STATION</span>
+                </div>
+            </div>
         </div>
 
-        <div id="chat-log" class="chat-log">
-            <div class="msg sys">SYSTEM INITIALIZED...</div>
+        <div class="map-wrapper">
+            <div class="vignette"></div>
+            <div class="scan-line"></div>
+            
+            <div id="alert-modal" class="call-modal hidden">
+                <h2 class="flash">INCOMING TRAFFIC</h2>
+                <div id="alert-type">PRIORITY 1</div>
+                <button class="big-btn" onclick="acceptCall()">CONNECT</button>
+            </div>
+
+            <div id="mic-viz" class="mic-viz hidden">
+                <div class="mic-label">TRANSMITTING... (SPEAK NOW)</div>
+                <div class="freq-bars">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div>
+                </div>
+                <div id="voice-command-text" style="color:white; font-size:10px; margin-top:5px;"></div>
+            </div>
+
+            <canvas id="map"></canvas>
         </div>
 
-        <div class="controls">
-            <div class="unit-grid">
-                <button class="u-btn" id="PD-01" onclick="toggleUnit('PD-01')">PD-01 (Patrol)</button>
-                <button class="u-btn" id="PD-05" onclick="toggleUnit('PD-05')">PD-05 (Sgt)</button>
-                <button class="u-btn" id="MEDIC-1" onclick="toggleUnit('MEDIC-1')">MEDIC-1 (ALS)</button>
-                <button class="u-btn" id="FIRE-3" onclick="toggleUnit('FIRE-3')">FIRE-3 (Eng)</button>
+        <div class="panel-right">
+            <div class="header">RADIO LOG</div>
+            <div id="game-log" class="log">
+                <div class="msg sys">SYSTEM: VOICE RECOGNITION ACTIVE.</div>
+                <div class="msg sys">HOLD [SPACEBAR] TO TALK.</div>
+                <div class="msg sys">CMD: "[UNIT NAME] RESPOND"</div>
             </div>
             
-            <button id="disp-btn" class="action-btn" onclick="dispatch()" disabled>TRANSMIT DISPATCH</button>
+            <div class="sticky">
+                <u>SECTOR NOTES:</u><br>
+                - Mic cuts out near prison.<br>
+                - Walmart is 400 blk.<br>
+                - <b>MINIMUM CALL TIME: 3 MIN</b><br>
+                - Do NOT clear units early.
+            </div>
         </div>
     </div>
-</div>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
