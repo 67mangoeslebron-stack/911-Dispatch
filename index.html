@@ -2,73 +2,90 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CAD V144 - PROFESSIONAL</title>
+    <title>SECTOR COMMAND V146</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+<div id="start-screen" class="overlay-screen">
+    <div class="login-box">
+        <h2 style="color:var(--highlight);">CAD LOGIN</h2>
+        <div>SECTOR 4 - SOUTH</div>
+        <button class="big-btn" onclick="startGame()">START SHIFT</button>
+    </div>
+</div>
+
+<div id="end-screen" class="overlay-screen hidden">
+    <div class="login-box">
+        <h2 style="color:var(--terminal-green);">SHIFT COMPLETE</h2>
+        <div>TOTAL INCIDENTS: <span id="total-calls">0</span></div>
+        <button class="big-btn" onclick="location.reload()">LOGOUT</button>
+    </div>
+</div>
+
+<div id="call-modal" class="call-module">
+    <div class="module-header">⚠️ INCOMING ALERT ⚠️</div>
+    <div>PRIORITY LINE 1 RINGING</div>
+    <button class="module-btn" onclick="acceptCall()">ANSWER</button>
+</div>
 
 <div class="container">
     <div class="panel">
         <div class="header">
             <span>INCIDENT BOARD</span>
-            <span id="sys-status" style="color:#666; font-size:11px;">READY</span>
+            <span id="clock-display" class="clock">00:00</span>
         </div>
         
-        <div class="field-group">
-            <span class="label">NATURE OF INCIDENT</span>
-            <span id="c-type" class="value">--</span>
+        <div class="data-row">
+            <span class="lbl">TYPE CODE</span>
+            <span id="c-type" class="val">--</span>
         </div>
-        <div class="field-group">
-            <span class="label">PRIORITY</span>
-            <span id="c-pri" class="value">--</span>
+        <div class="data-row">
+            <span class="lbl">PRIORITY</span>
+            <span id="c-pri" class="val">--</span>
         </div>
-        <div class="field-group">
-            <span class="label">LOCATION</span>
-            <span id="c-addr" class="value alert">--</span>
+        <div class="data-row">
+            <span class="lbl">LOCATION</span>
+            <span id="c-addr" class="val active">--</span>
+        </div>
+
+        <div class="digital-widget">
+            > SYSTEM NOTES:<br>
+            - Construction on Broadway.<br>
+            - Unit PD-04 is OOS.<br>
+            - Check SMS queue freq.
         </div>
         
-        <div style="margin-top:auto; padding:15px; border-top:1px solid #333;">
-            <span class="label">ADDRESS VERIFICATION</span>
-            <button class="action-btn" style="width:100%; margin-top:5px; background:#333;" onclick="verifyAddress()">VERIFY LOCATION</button>
+        <div style="margin-top:auto; padding:15px;">
+            <button class="action-btn" style="width:100%; background:#21262d; border:1px solid #30363d;" onclick="triggerCall()">SIMULATE ALERT (F9)</button>
+            <button class="action-btn" style="width:100%; margin-top:5px; background:var(--alert); color:black;" onclick="endShift()">END SHIFT</button>
         </div>
     </div>
 
     <div class="map-wrapper">
         <canvas id="map-canvas"></canvas>
-        <div class="map-overlay">
-            <div class="overlay-title">Metro Area South</div>
-            <div class="overlay-sub">Live Traffic • Units: 3 • Incidents: 1</div>
-        </div>
+        <div class="vignette"></div>
     </div>
 
     <div class="panel-right">
         <div class="header">
-            <span>UNIT MANAGEMENT</span>
-            <div style="font-size:11px; color:#666;">CH: MAIN-1</div>
+            <span>COMMS & UNITS</span>
+            <button id="mic-btn" class="mic-btn" onclick="toggleMic()">🎙️</button>
+        </div>
+
+        <div id="chat-log" class="chat-log">
+            <div class="msg sys">SYSTEM INITIALIZED...</div>
         </div>
 
         <div class="controls">
-            <div class="unit-list">
-                <div class="u-row" id="PD-01" onclick="toggleUnit('PD-01')">
-                    <span>PD-01 (Patrol)</span> <span class="u-stat">AVAIL</span>
-                </div>
-                <div class="u-row" id="PD-05" onclick="toggleUnit('PD-05')">
-                    <span>PD-05 (SWAT)</span> <span class="u-stat">AVAIL</span>
-                </div>
-                <div class="u-row" id="MEDIC-1" onclick="toggleUnit('MEDIC-1')">
-                    <span>MEDIC-1 (ALS)</span> <span class="u-stat">AVAIL</span>
-                </div>
-                <div class="u-row" id="FIRE-3" onclick="toggleUnit('FIRE-3')">
-                    <span>FIRE-3 (Eng)</span> <span class="u-stat">AVAIL</span>
-                </div>
+            <div class="unit-grid">
+                <button class="u-btn" id="PD-01" onclick="toggleUnit('PD-01')">PD-01 (Patrol)</button>
+                <button class="u-btn" id="PD-05" onclick="toggleUnit('PD-05')">PD-05 (Sgt)</button>
+                <button class="u-btn" id="MEDIC-1" onclick="toggleUnit('MEDIC-1')">MEDIC-1 (ALS)</button>
+                <button class="u-btn" id="FIRE-3" onclick="toggleUnit('FIRE-3')">FIRE-3 (Eng)</button>
             </div>
             
-            <button id="disp-btn" class="action-btn" onclick="dispatch()" disabled>DISPATCH UNITS</button>
-            <button class="secondary-btn" onclick="nextCall()">RECEIVE CALL (F9)</button>
-        </div>
-
-        <div class="chat-area" id="log">
-            <div class="msg sys">System Ready.</div>
+            <button id="disp-btn" class="action-btn" onclick="dispatch()" disabled>TRANSMIT DISPATCH</button>
         </div>
     </div>
 </div>
