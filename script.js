@@ -1,73 +1,105 @@
-// script.js - V144 GEOGRAPHIC ENGINE
+// script.js - V146 SECTOR 4 REALISM
 
+// --- SCENARIO DATABASE ---
 const SCENARIOS = [
-    { type: "DOMESTIC", priority: "P2", addr: "6892 PARKVIEW PL", intro: "He's throwing things at me!", details: "6892 Parkview. Husband is intoxicated.", mapX: 0.35, mapY: 0.25 },
-    { type: "MEDICAL", priority: "P1", addr: "EDGEWATER APTS", intro: "Unconscious female.", details: "Edgewater Apts, Bldg 5. Overdose suspected.", mapX: 0.82, mapY: 0.65 },
-    { type: "FIRE", priority: "P1", addr: "3762 CLEVEMONT WAY", intro: "Structure fire, visible flames.", details: "3762 Clevemont Way. Kitchen fire.", mapX: 0.15, mapY: 0.55 },
-    { type: "ALARM", priority: "P3", addr: "MAZE BANK", intro: "Silent hold-up alarm.", details: "Maze Bank Downtown. Zone 4 Vault.", mapX: 0.55, mapY: 0.45, isRobotic: true }
+    { type: "DISORDERLY", priority: "P3", addr: "TACO BELL", intro: "Customer refusing to leave, yelling at staff.", details: "Taco Bell on Broadway. Male subject, agitated.", mapX: 0.25, mapY: 0.4, isSMS: false },
+    { type: "MEDICAL", priority: "P1", addr: "WALGREENS", intro: "Elderly male fell, head injury.", details: "Walgreens parking lot. Bleeding heavily.", mapX: 0.6, mapY: 0.15, isSMS: false },
+    { type: "ALARM", priority: "P2", addr: "SHELL GAS", intro: "Silent hold-up alarm triggered.", details: "Shell Station at the intersection. No answer on callback.", mapX: 0.4, mapY: 0.3, isSMS: false },
+    { type: "DOMESTIC", priority: "P1", addr: "EDGEWATER APTS", intro: "Fighting heard in unit 4B.", details: "Edgewater Complex. Screaming and throwing objects.", mapX: 0.1, mapY: 0.15, isSMS: false },
+    { type: "SUSPICIOUS", priority: "P3", addr: "JACK IN THE BOX", intro: "Person looking into cars.", details: "Jack in the Box drive-thru area. Wearing black hoodie.", mapX: 0.5, mapY: 0.5, isSMS: false },
+    // SMS CALLS
+    { type: "TEXT-911", priority: "P2", addr: "NORTHSIDE HIGH", intro: "Im hiding in the bathroom. Someone is here.", details: "SMS RECEIVED: Northside High School. Intruder reported.", mapX: 0.8, mapY: 0.8, isSMS: true },
+    { type: "TEXT-911", priority: "P1", addr: "RESIDENTIAL", intro: "cant talk. husband has a knife.", details: "SMS RECEIVED: 4402 Oak Street. DV with weapon.", mapX: 0.3, mapY: 0.7, isSMS: true }
 ];
 
 let currentCall = null;
 let selectedUnits = [];
 let mapTarget = null;
+let gameActive = false;
+let shiftCalls = 0;
 let micActive = false;
-let voices = [];
 const synth = window.speechSynthesis;
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-// --- VOICE ---
-function loadVoices() { voices = synth.getVoices(); }
-loadVoices();
-if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
+// --- CLOCK SYSTEM ---
+let timeH = Math.floor(Math.random() * 12) + 6; // Random start time
+let timeM = Math.floor(Math.random() * 59);
+setInterval(() => {
+    if(!gameActive) return;
+    timeM++;
+    if(timeM > 59) { timeM = 0; timeH++; }
+    if(timeH > 23) timeH = 0;
+    const pad = (n) => n < 10 ? '0'+n : n;
+    document.getElementById('clock-display').innerText = `${pad(timeH)}:${pad(timeM)}`;
+}, 1000);
 
-function speak(text, type = 'caller') {
-    if (synth.speaking) synth.cancel();
-    const ut = new SpeechSynthesisUtterance(text);
-    ut.rate = type === 'dispatcher' ? 1.1 : 1.0;
-    if(type === 'dispatcher') playTone();
-    synth.speak(ut);
-}
-
-function playTone() {
-    // Professional "Beep" instead of static
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.frequency.value = 800;
-    gain.gain.value = 0.05;
-    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-}
-
-// --- LOGIC ---
-function nextCall() {
+// --- GAME STATE ---
+function startGame() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
+    document.getElementById('start-screen').classList.add('hidden');
+    gameActive = true;
+    addLog("sys", "SHIFT STARTED. USER: DISPATCH_01");
+    addLog("sys", "SECTOR 4 MAP LOADED.");
+}
+
+function endShift() {
+    gameActive = false;
+    document.getElementById('end-screen').classList.remove('hidden');
+    document.getElementById('total-calls').innerText = shiftCalls;
+}
+
+// --- CALL LOGIC ---
+function triggerCall() {
+    if(!gameActive) return;
     currentCall = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)];
-    mapTarget = null; selectedUnits = [];
-    document.getElementById('log').innerHTML = '<div class="msg sys">-- NEW SESSION STARTED --</div>';
-    document.getElementById('sys-status').innerText = "INCOMING 911";
-    document.getElementById('sys-status').style.color = "#d32f2f";
+    
+    // Ringtone
+    const osc = audioCtx.createOscillator();
+    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+    osc.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+
+    document.getElementById('call-modal').style.display = 'block';
+    // If SMS, change header
+    if(currentCall.isSMS) {
+        document.querySelector('.module-header').innerText = "INCOMING TEXT-911";
+    } else {
+        document.querySelector('.module-header').innerText = "INCOMING VOICE CALL";
+    }
+}
+
+function acceptCall() {
+    document.getElementById('call-modal').style.display = 'none';
+    shiftCalls++;
     
     document.getElementById('c-type').innerText = currentCall.type;
     document.getElementById('c-pri').innerText = currentCall.priority;
     document.getElementById('c-addr').innerText = "VERIFYING...";
-    
-    speak("911, emergency.", 'dispatcher');
-    addMsg('disp', "911, emergency.");
-    
-    setTimeout(() => {
-        addMsg('caller', currentCall.intro);
-        speak(currentCall.intro);
-        document.getElementById('c-addr').innerText = "TRACING...";
-    }, 1500);
+    document.getElementById('disp-btn').disabled = true;
+    selectedUnits = [];
+    document.querySelectorAll('.u-btn').forEach(b => b.classList.remove('selected'));
+
+    if(currentCall.isSMS) {
+        addLog("sys", "** DIRECT 911 SMS CONNECTED **");
+        setTimeout(() => {
+            addLog("sms", `MSG: ${currentCall.intro}`);
+            document.getElementById('c-addr').innerText = currentCall.addr;
+            mapTarget = { x: currentCall.mapX, y: currentCall.mapY };
+        }, 1500);
+    } else {
+        addLog("sys", "VOICE LINE CONNECTED");
+        speak("911, what is the location of your emergency?");
+        setTimeout(() => {
+            addLog("caller", currentCall.intro);
+            speak(currentCall.intro);
+            document.getElementById('c-addr').innerText = currentCall.addr;
+            mapTarget = { x: currentCall.mapX, y: currentCall.mapY };
+        }, 2000);
+    }
 }
 
-function verifyAddress() {
-    if(!currentCall) return;
-    document.getElementById('c-addr').innerText = currentCall.addr;
-    mapTarget = {x: currentCall.mapX, y: currentCall.mapY};
-    checkReady();
-}
-
+// --- DISPATCH LOGIC ---
 function toggleUnit(id) {
     const el = document.getElementById(id);
     if(selectedUnits.includes(id)) {
@@ -77,29 +109,56 @@ function toggleUnit(id) {
         selectedUnits.push(id);
         el.classList.add('selected');
     }
-    checkReady();
-}
-
-function checkReady() {
-    if(mapTarget && selectedUnits.length > 0) document.getElementById('disp-btn').disabled = false;
+    
+    if(currentCall && selectedUnits.length > 0) {
+        document.getElementById('disp-btn').disabled = false;
+    }
 }
 
 function dispatch() {
-    addMsg('radio', `Dispatch to units: Respond Code 3 to ${currentCall.addr}.`);
-    speak("Units respond Code 3.", 'dispatcher');
+    if(!currentCall) return;
+    
+    const unitNames = selectedUnits.join(" and ");
+    const msg = `${unitNames}, please respond to ${currentCall.addr}.`;
+    
+    addLog("radio", `DISP: ${msg}`);
+    speak(msg);
+    
     document.getElementById('disp-btn').disabled = true;
-    document.getElementById('sys-status').innerText = "UNIT EN ROUTE";
-    document.getElementById('sys-status').style.color = "#4a90e2";
+    mapTarget = null;
+    currentCall = null;
 }
 
-function addMsg(type, text) {
+// --- AUDIO / COMMS ---
+function speak(text) {
+    const ut = new SpeechSynthesisUtterance(text);
+    ut.rate = 1.1; 
+    synth.speak(ut);
+}
+
+// --- MIC INPUT (Simple Visualization) ---
+function toggleMic() {
+    micActive = !micActive;
+    const btn = document.getElementById('mic-btn');
+    if(micActive) {
+        btn.classList.add('active');
+        addLog("sys", "MIC OPEN [TRANSMITTING]");
+    } else {
+        btn.classList.remove('active');
+        addLog("sys", "MIC CLOSED");
+    }
+}
+
+function addLog(type, text) {
     const d = document.createElement('div');
     d.className = `msg ${type}`;
     d.innerText = text;
-    document.getElementById('log').appendChild(d);
+    const log = document.getElementById('chat-log');
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
 }
 
-// --- PROFESSIONAL MAP RENDERER ---
+// --- SECTOR 4 MAP RENDERER ---
 const canvas = document.getElementById('map-canvas');
 const ctx = canvas.getContext('2d');
 
@@ -108,82 +167,65 @@ function drawMap() {
     canvas.height = canvas.parentElement.clientHeight;
     const w = canvas.width; const h = canvas.height;
 
-    // 1. Base Layer
-    ctx.fillStyle = "#18191d"; ctx.fillRect(0,0,w,h);
+    // 1. Base
+    ctx.fillStyle = "#0d1117"; ctx.fillRect(0,0,w,h);
 
-    // 2. River (Curved Geometry)
-    ctx.strokeStyle = "#16212e"; ctx.lineWidth = 45; ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(w*0.7, 0);
-    ctx.bezierCurveTo(w*0.6, h*0.4, w*0.9, h*0.6, w*0.5, h);
+    // 2. High-Density Road Network
+    ctx.lineCap = "round";
+
+    // Interstate 5 (Curved Orange)
+    ctx.strokeStyle = "#443322"; ctx.lineWidth = 45;
+    ctx.beginPath(); ctx.moveTo(0, h*0.3); ctx.bezierCurveTo(w*0.5, h*0.3, w*0.5, h*0.9, w, h*0.9); ctx.stroke();
+    ctx.strokeStyle = "#d27504"; ctx.lineWidth = 35; ctx.stroke();
+
+    // Arterials (Grey)
+    ctx.strokeStyle = "#30363d"; ctx.lineWidth = 14;
+    // Broadway
+    ctx.beginPath(); ctx.moveTo(w*0.3, 0); ctx.lineTo(w*0.3, h); ctx.stroke();
+    // 4th Ave
+    ctx.beginPath(); ctx.moveTo(0, h*0.6); ctx.lineTo(w, h*0.6); ctx.stroke();
+
+    // Side Streets (Thin)
+    ctx.lineWidth = 6;
+    ctx.beginPath(); 
+    // Grid fill
+    for(let i=0; i<w; i+=80) { ctx.moveTo(i, 0); ctx.lineTo(i, h); }
+    for(let i=0; i<h; i+=80) { ctx.moveTo(0, i); ctx.lineTo(w, i); }
     ctx.stroke();
 
-    // 3. Secondary Streets (Grey Network)
-    ctx.strokeStyle = "#2c2e33"; ctx.lineWidth = 3;
-    // Draw semi-random street grid (Static for consistency)
-    ctx.beginPath();
-    // Vertical arterials
-    ctx.moveTo(w*0.2, 0); ctx.lineTo(w*0.2, h);
-    ctx.moveTo(w*0.4, 0); ctx.lineTo(w*0.4, h);
-    ctx.moveTo(w*0.8, 0); ctx.lineTo(w*0.8, h);
-    // Horizontal arterials
-    ctx.moveTo(0, h*0.3); ctx.lineTo(w, h*0.3);
-    ctx.moveTo(0, h*0.7); ctx.lineTo(w, h*0.7);
-    // Diagonals
-    ctx.moveTo(0, h*0.2); ctx.lineTo(w*0.3, h);
-    ctx.stroke();
+    // 3. Real Businesses & Landmarks
+    drawLandmark(w*0.25, h*0.4, "TACO BELL", "#ff6b6b");
+    drawLandmark(w*0.6, h*0.15, "WALGREENS", "#ff4757");
+    drawLandmark(w*0.4, h*0.3, "SHELL", "#ffa502");
+    drawLandmark(w*0.1, h*0.15, "EDGEWATER", "#747d8c");
+    drawLandmark(w*0.5, h*0.5, "JACK IN BOX", "#ff6b6b");
+    drawLandmark(w*0.8, h*0.8, "NORTH HIGH", "#1e90ff");
 
-    // 4. Highway (Muted Orange - Curved)
-    // Outer glow/stroke
-    ctx.strokeStyle = "#a05a1a"; ctx.lineWidth = 14;
-    ctx.beginPath();
-    ctx.moveTo(0, h*0.55);
-    ctx.bezierCurveTo(w*0.4, h*0.5, w*0.6, h*0.45, w, h*0.2);
-    ctx.stroke();
-    // Inner fill
-    ctx.strokeStyle = "#c27c2e"; ctx.lineWidth = 10;
-    ctx.stroke();
-
-    // 5. Landmarks (Subtle Text)
-    drawLabel(w*0.55, h*0.42, "MAZE BANK", "#aaa");
-    drawLabel(w*0.22, h*0.28, "POLICE HQ", "#4a90e2");
-    drawLabel(w*0.85, h*0.22, "GENERAL HOSP", "#d32f2f");
-
-    // 6. Unit Markers (Blue Dots)
-    drawUnit(w*0.22, h*0.3, "PD-1");
-    drawUnit(w*0.45, h*0.52, "PD-5");
-    drawUnit(w*0.82, h*0.24, "MD-1");
-
-    // 7. Active Incident (Red Marker)
+    // 4. Incident Marker
     if(mapTarget) {
         const tx = mapTarget.x * w; const ty = mapTarget.y * h;
-        // Outer fade
-        const grad = ctx.createRadialGradient(tx, ty, 5, tx, ty, 20);
-        grad.addColorStop(0, "rgba(211, 47, 47, 0.5)");
-        grad.addColorStop(1, "rgba(211, 47, 47, 0)");
-        ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.arc(tx, ty, 20, 0, Math.PI*2); ctx.fill();
-        
-        // Solid center
-        ctx.fillStyle = "#d32f2f"; 
-        ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI*2); ctx.fill();
-        
-        // Label
-        ctx.fillStyle = "#fff"; ctx.font = "bold 11px Arial"; 
-        ctx.fillText("INC-1", tx+10, ty+4);
+        // Pulse
+        ctx.strokeStyle = `rgba(210, 168, 255, ${Math.abs(Math.sin(Date.now()/300))})`;
+        ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(tx, ty, 25, 0, Math.PI*2); ctx.stroke();
+        ctx.fillStyle = "#d2a8ff"; ctx.beginPath(); ctx.arc(tx, ty, 8, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.font = "bold 12px Arial"; ctx.fillText("INC-1", tx+12, ty+4);
     }
+    
+    // 5. Units (Static for now, implies movement)
+    drawUnit(w*0.25, h*0.3, "PD-01");
+    drawUnit(w*0.6, h*0.6, "MED-1");
 
     requestAnimationFrame(drawMap);
 }
 
-function drawLabel(x, y, txt, col) {
-    ctx.fillStyle = col; ctx.font = "600 10px Segoe UI"; ctx.fillText(txt, x, y);
+function drawLandmark(x, y, txt, col) {
+    ctx.fillStyle = col; ctx.fillRect(x-10, y-10, 20, 20);
+    ctx.fillStyle = "#8b949e"; ctx.font = "10px Arial"; ctx.fillText(txt, x-15, y-15);
 }
 
-function drawUnit(x, y, label) {
-    ctx.fillStyle = "#4a90e2";
-    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "#888"; ctx.font = "9px Arial"; ctx.fillText(label, x+6, y+3);
+function drawUnit(x, y, txt) {
+    ctx.fillStyle = "#58a6ff"; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#58a6ff"; ctx.font = "9px Arial"; ctx.fillText(txt, x+8, y+3);
 }
 
 drawMap();
