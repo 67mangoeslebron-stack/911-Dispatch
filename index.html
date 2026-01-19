@@ -2,399 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>911 Dispatch V138 - Roads & Smart AI</title>
-    <style>
-        :root { --bg: #020617; --panel: #0f172a; --accent: #38bdf8; --red: #ef4444; --gold: #eab308; --text: #f1f5f9; --green: #22c55e; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; height: 100vh; display: flex; overflow: hidden; }
-        
-        /* LEFT SIDE: MAP */
-        .map-area { flex: 2; position: relative; background: #050b14; border-right: 3px solid #334155; overflow: hidden; }
-        canvas { display: block; width: 100%; height: 100%; }
-        .map-overlay { position: absolute; bottom: 20px; left: 20px; color: var(--accent); font-size: 14px; font-weight: bold; pointer-events: none; text-shadow: 0 0 5px black; }
-        .score-box { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.8); border: 2px solid var(--gold); color: var(--gold); padding: 10px 20px; font-size: 20px; font-weight: bold; border-radius: 5px; }
-
-        /* RIGHT SIDE: CAD SYSTEM */
-        .cad-area { flex: 1; display: flex; flex-direction: column; min-width: 450px; background: var(--panel); border-left: 1px solid #1e293b; }
-        
-        .header { background: #1e293b; padding: 15px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; }
-        .title { font-weight: 900; font-size: 18px; letter-spacing: 1px; color: var(--accent); }
-        
-        .log { flex: 1; background: #000; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid #334155; }
-        
-        .msg { padding: 8px 12px; border-radius: 4px; max-width: 85%; font-size: 13px; line-height: 1.4; animation: fadeIn 0.3s ease; }
-        .msg.caller { align-self: flex-start; background: #450a0a; border-left: 4px solid var(--red); color: #fecaca; }
-        .msg.radio { align-self: flex-start; background: #172554; border-left: 4px solid var(--gold); color: #bfdbfe; font-family: 'Consolas', monospace; }
-        .msg.disp { align-self: flex-end; background: #0f172a; border-right: 4px solid var(--accent); color: #e2e8f0; text-align: right; }
-        .msg.sys { align-self: center; font-size: 11px; color: #64748b; font-style: italic; text-align: center; }
-        
-        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-
-        .controls { padding: 15px; background: #1e293b; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #334155; }
-        
-        /* UNIT GRID */
-        .unit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-        .u-btn { padding: 12px; background: #334155; border: 1px solid #475569; color: #cbd5e1; cursor: pointer; font-size: 12px; font-weight: bold; transition: all 0.2s; text-align: center; }
-        .u-btn:hover { background: #475569; }
-        .u-btn.selected { border-color: var(--green); background: #064e3b; color: var(--green); box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.2); }
-
-        /* INPUTS */
-        .input-row { display: flex; gap: 8px; }
-        input { background: #0f172a; border: 1px solid #475569; color: white; padding: 12px; font-family: monospace; text-transform: uppercase; flex: 1; outline: none; }
-        input:focus { border-color: var(--accent); }
-        
-        button { border: none; cursor: pointer; font-weight: bold; font-family: inherit; }
-        .action-btn { padding: 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .btn-green { background: var(--green); color: black; }
-        .btn-green:hover { background: #4ade80; }
-        .btn-gold { background: var(--gold); color: black; opacity: 0.5; cursor: not-allowed; }
-        .btn-gold.active { opacity: 1; cursor: pointer; }
-        .btn-gold.active:hover { background: #facc15; }
-        .btn-blue { background: #3b82f6; color: white; width: 100%; margin-top: 5px; }
-
-        .mic-btn { width: 40px; height: 40px; border-radius: 50%; background: #334155; color: white; font-size: 18px; display: flex; align-items: center; justify-content: center; }
-        .mic-btn.active { background: var(--red); box-shadow: 0 0 15px var(--red); animation: pulse 1.5s infinite; }
-        
-        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
-    </style>
+    <title>911 CAD V140</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="map-area">
-    <canvas id="map-canvas"></canvas>
-    <div class="score-box">SCORE: <span id="score-val">0</span></div>
-    <div class="map-overlay">
-        <div>METRO CAD MAP V3.0</div>
-        <div id="coords">SYSTEM ACTIVE</div>
+<div class="container">
+    <div class="panel">
+        <div class="header">
+            <span>CAD V140</span>
+            <span style="font-size:10px; background:var(--green); color:black; padding:2px 6px; border-radius:2px;">ONLINE</span>
+        </div>
+        <div class="call-card">
+            <div class="card-top"><span id="call-type">WAITING...</span><span id="call-priority">--</span></div>
+            <div class="card-body">
+                <div class="data-row"><div class="data-label">Address</div><div class="data-val" id="call-addr">--</div></div>
+                <div class="data-row"><div class="data-label">Caller</div><div class="data-val" id="call-caller">--</div></div>
+                <div class="data-row"><div class="data-label">Notes</div><div class="data-val" id="call-notes" style="color:#9ca3af; font-style:italic;">No active call</div></div>
+            </div>
+        </div>
+        <div style="padding:15px;">
+            <div class="sub-header">Location Verification</div>
+            <input type="text" id="inp-addr" placeholder="Enter Address..." style="width:90%; padding:10px; background:#111827; border:1px solid #374151; color:white; margin-bottom:10px;">
+            <button class="action-btn" style="width:100%; background:var(--green);" onclick="verifyAddress()">VERIFY LOCATION</button>
+        </div>
+    </div>
+
+    <div class="map-wrapper">
+        <canvas id="map-canvas"></canvas>
+        <div class="map-overlay"><div>METRO MAP LIVE</div><div id="coords" style="color:var(--accent)">LAT: 34.0522</div></div>
+    </div>
+
+    <div class="panel-right">
+        <div class="header"><span>COMMS & UNITS</span><button id="mic-toggle" class="mic-btn" onclick="toggleMic()">🎙️</button></div>
+        <div class="chat-area" id="log"><div class="msg sys">SYSTEM INITIALIZED.</div></div>
+        <div class="controls">
+            <div class="sub-header">Active Units</div>
+            <div class="unit-grid">
+                <div class="u-btn" id="PD-01" onclick="toggleUnit('PD-01')">🚓 PD-01 (Patrol)</div>
+                <div class="u-btn" id="PD-05" onclick="toggleUnit('PD-05')">🚓 PD-05 (S.W.A.T)</div>
+                <div class="u-btn" id="EAGLE-1" onclick="toggleUnit('EAGLE-1')">🚁 EAGLE-1 (Air)</div>
+                <div class="u-btn" id="MEDIC-1" onclick="toggleUnit('MEDIC-1')">🚑 MEDIC-1 (EMS)</div>
+                <div class="u-btn" id="FIRE-3" onclick="toggleUnit('FIRE-3')">🚒 FIRE-3 (Engine)</div>
+                <div class="u-btn" id="BAT-1" onclick="toggleUnit('BAT-1')">🚒 BAT-1 (Chief)</div>
+            </div>
+            <button id="disp-btn" class="action-btn" onclick="dispatch()" disabled>TRANSMIT DISPATCH</button>
+            <button class="action-btn" style="background:#4b5563;" onclick="nextCall()">RECEIVE 911 CALL</button>
+        </div>
     </div>
 </div>
 
-<div class="cad-area">
-    <div class="header">
-        <div class="title">METRO DISPATCH V138</div>
-        <button id="mic-toggle" class="mic-btn" onclick="toggleMic()">🎙️</button>
-    </div>
-
-    <div class="log" id="log">
-        <div class="msg sys">SYSTEM READY. WAITING FOR CALL...</div>
-    </div>
-
-    <div class="controls">
-        <div class="unit-grid">
-            <div class="u-btn" id="PD-01" onclick="toggleUnit('PD-01')">🚓 PD-01 PATROL</div>
-            <div class="u-btn" id="PD-05" onclick="toggleUnit('PD-05')">🚓 PD-05 K9 UNIT</div>
-            <div class="u-btn" id="MEDIC-1" onclick="toggleUnit('MEDIC-1')">🚑 MEDIC-1 EMS</div>
-            <div class="u-btn" id="FIRE-3" onclick="toggleUnit('FIRE-3')">🚒 FIRE-3 ENGINE</div>
-        </div>
-
-        <div class="input-row">
-            <input type="text" id="inp-addr" placeholder="ENTER VERIFIED ADDRESS">
-            <button class="action-btn btn-green" onclick="verifyAddress()">LOCATE</button>
-        </div>
-
-        <button id="disp-btn" class="action-btn btn-gold" onclick="dispatch()" disabled>TRANSMIT DISPATCH (+50 PTS)</button>
-
-        <button class="action-btn btn-blue" onclick="nextCall()">📞 RECEIVE NEXT CALL</button>
-    </div>
-</div>
-
-<script>
-    // --- 9 SCENARIOS ---
-    const SCENARIOS = [
-        { type: "DOMESTIC", addr: "4402 OAKWOOD DRIVE", intro: "He's breaking everything! I locked myself in the bathroom! Send help!", details: "My husband! He's drunk and he has a bat! 4402 Oakwood Drive!", mapX: 0.2, mapY: 0.3 },
-        { type: "FIRE", addr: "89 INDUSTRIAL PARKWAY", intro: "I see smoke coming from the warehouse! It's getting black!", details: "It's the old textile factory at 89 Industrial Parkway. I think there are people inside!", mapX: 0.8, mapY: 0.2 },
-        { type: "MEDICAL", addr: "212 SUNSET BLVD", intro: "My dad just collapsed, he's not breathing! Oh god!", details: "We are at 212 Sunset Blvd, apartment 4B. Please hurry, he's turning blue!", mapX: 0.5, mapY: 0.6 },
-        { type: "SUSPICIOUS", addr: "1500 MAIN STREET", intro: "There's a guy with a knife screaming at people near the bank.", details: "He's at 1500 Main Street, right in front of the ATM. He looks unstable.", mapX: 0.3, mapY: 0.8 },
-        { type: "MVA", addr: "I-95 MILE MARKER 4", intro: "Two cars just smashed into each other! One flipped over!", details: "We are on I-95 Southbound, near Mile Marker 4. There's glass everywhere.", mapX: 0.6, mapY: 0.4 },
-        { type: "ROBBERY", addr: "550 FIFTH AVE", intro: "We're being robbed! They have guns! Don't let them hear me!", details: "We're at the Jewelry Store at 550 Fifth Ave. Three men in masks.", mapX: 0.4, mapY: 0.5 },
-        { type: "NOISE", addr: "77 BIRCH LANE", intro: "My neighbors are blasting music, I can't sleep! It's 2 AM!", details: "It's the house at 77 Birch Lane. This happens every weekend.", mapX: 0.1, mapY: 0.1 },
-        { type: "ALARM", addr: "100 SCHOOL ROAD", intro: "This is the alarm company. We have a silent panic alarm trigger.", details: "The address is 100 School Road. Valid zone 3 trigger. No answer on premise.", mapX: 0.9, mapY: 0.9 },
-        { type: "ANIMAL", addr: "12 PARK PLACE", intro: "There is a massive bear in my backyard trying to eat my dog!", details: "12 Park Place! Please hurry, the bear is breaking the fence!", mapX: 0.2, mapY: 0.6 }
-    ];
-
-    let currentCall = null;
-    let selectedUnits = []; // Array for multi-select
-    let mapTarget = null;
-    let micActive = false;
-    let score = 0;
-    let voices = [];
-    const synth = window.speechSynthesis;
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    // --- VOICE LOGIC (LESS ROBOTIC) ---
-    function loadVoices() { voices = synth.getVoices(); }
-    loadVoices();
-    if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
-
-    function getBestVoice(isRadio) {
-        if (!voices.length) return null;
-        // Prioritize natural voices
-        const natural = ["Google US English", "Microsoft Zira", "Samantha"];
-        for (let name of natural) {
-            const found = voices.find(v => v.name.includes(name));
-            if (found) return found;
-        }
-        return voices[0];
-    }
-
-    function speak(text, isRadio = false) {
-        if (synth.speaking) synth.cancel();
-        
-        const ut = new SpeechSynthesisUtterance(text);
-        const bestVoice = getBestVoice(isRadio);
-        if (bestVoice) ut.voice = bestVoice;
-
-        if (isRadio) {
-            // DISPATCHER: Deeper, fast, Radio FX
-            ut.pitch = 0.8; // Less robotic deepness (was 0.6)
-            ut.rate = 1.2; 
-            ut.volume = 1.0;
-            const duration = (text.split(' ').length / 2.5) * 1000; 
-            playRadioBurst(duration);
-        } else {
-            // CALLER: Normal pitch (Less robotic)
-            ut.pitch = 1.0; 
-            ut.rate = 1.0; 
-        }
-        synth.speak(ut);
-    }
-
-    function playRadioBurst(durationMs) {
-        createNoise(0.15, 0.3); // Start click
-        setTimeout(() => createNoise(durationMs / 1000, 0.1), 150); // Background hiss
-        setTimeout(() => createNoise(0.15, 0.3), durationMs + 150); // End click
-    }
-
-    function createNoise(duration, vol) {
-        const bufSz = audioCtx.sampleRate * duration;
-        const buf = audioCtx.createBuffer(1, bufSz, audioCtx.sampleRate);
-        const data = buf.getChannelData(0);
-        for (let i = 0; i < bufSz; i++) data[i] = Math.random() * 2 - 1;
-        
-        const src = audioCtx.createBufferSource();
-        src.buffer = buf;
-        const gain = audioCtx.createGain();
-        gain.gain.value = vol;
-        
-        // Lowpass filter to dampen the harshness
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 800;
-
-        src.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-        src.start();
-    }
-
-    // --- GAME LOGIC ---
-    function nextCall() {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        currentCall = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)];
-        
-        // Reset State
-        mapTarget = null;
-        selectedUnits = [];
-        document.getElementById('inp-addr').value = "";
-        const btn = document.getElementById('disp-btn');
-        btn.className = "action-btn btn-gold";
-        btn.disabled = true;
-        btn.innerText = "TRANSMIT DISPATCH (+50 PTS)";
-        
-        document.querySelectorAll('.u-btn').forEach(b => b.classList.remove('selected'));
-
-        addMsg('sys', `INCOMING CALL... [${currentCall.type}]`);
-        setTimeout(() => {
-            addMsg('caller', currentCall.intro);
-            speak(currentCall.intro);
-        }, 1000);
-    }
-
-    function verifyAddress() {
-        const input = document.getElementById('inp-addr').value.toUpperCase();
-        if (!currentCall) return;
-
-        const correct = currentCall.addr.toUpperCase();
-        // Check fuzzy match
-        if (input.length > 4 && (correct.includes(input) || input.includes(correct.split(' ')[1]))) {
-            addMsg('sys', `LOCATION CONFIRMED: ${currentCall.addr}`);
-            mapTarget = { x: currentCall.mapX, y: currentCall.mapY };
-            checkReady();
-        } else {
-            addMsg('sys', "INVALID ADDRESS. (-10 PTS)");
-            updateScore(-10);
-        }
-    }
-
-    // --- MULTI UNIT SELECTION ---
-    function toggleUnit(id) {
-        const el = document.getElementById(id);
-        
-        if (selectedUnits.includes(id)) {
-            // Deselect
-            selectedUnits = selectedUnits.filter(u => u !== id);
-            el.classList.remove('selected');
-        } else {
-            // Select (Max 2 for balance, or unlimited if you want)
-            if(selectedUnits.length < 2) {
-                selectedUnits.push(id);
-                el.classList.add('selected');
-            } else {
-                addMsg('sys', "LIMIT: 2 UNITS MAX");
-            }
-        }
-        checkReady();
-    }
-
-    function checkReady() {
-        if (mapTarget && selectedUnits.length > 0) {
-            const btn = document.getElementById('disp-btn');
-            btn.className = "action-btn btn-gold active";
-            btn.disabled = false;
-        }
-    }
-
-    function dispatch() {
-        if (selectedUnits.length === 0) return;
-        
-        const unitString = selectedUnits.join(" and ");
-        const msg = `${unitString} en route to ${currentCall.addr}. Code 3.`;
-        
-        addMsg('radio', msg);
-        speak(msg, true);
-        
-        updateScore(50);
-        document.getElementById('disp-btn').disabled = true;
-        document.getElementById('disp-btn').className = "action-btn btn-gold";
-        document.getElementById('disp-btn').innerText = "DISPATCH SENT";
-        addMsg('sys', "UNITS DEPLOYED. SITUATION SECURE.");
-    }
-
-    function updateScore(val) {
-        score += val;
-        const el = document.getElementById('score-val');
-        el.innerText = score;
-        el.style.color = score >= 0 ? '#eab308' : '#ef4444';
-    }
-
-    function addMsg(type, text) {
-        const log = document.getElementById('log');
-        const div = document.createElement('div');
-        div.className = `msg ${type}`;
-        div.innerText = text;
-        log.appendChild(div);
-        log.scrollTop = log.scrollHeight;
-    }
-
-    // --- MIC & SMART AI ---
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-
-    recognition.onresult = (event) => {
-        const text = event.results[event.results.length - 1][0].transcript;
-        addMsg('disp', text);
-        processVoice(text);
-    };
-    
-    function toggleMic() {
-        const btn = document.getElementById('mic-toggle');
-        if (!micActive) {
-            try { recognition.start(); } catch(e){}
-            micActive = true;
-            btn.classList.add('active');
-        } else {
-            recognition.stop();
-            micActive = false;
-            btn.classList.remove('active');
-        }
-    }
-
-    function processVoice(text) {
-        if (!currentCall) return;
-        const lower = text.toLowerCase();
-        
-        // LOGIC 1: Ask Location
-        if (lower.includes("where") || lower.includes("address") || lower.includes("location")) {
-            setTimeout(() => {
-                addMsg('caller', currentCall.details);
-                speak(currentCall.details);
-            }, 1000);
-        }
-        // LOGIC 2: Ask What Happened
-        else if (lower.includes("what") || lower.includes("happened") || lower.includes("emergency")) {
-            setTimeout(() => {
-                addMsg('caller', currentCall.intro);
-                speak(currentCall.intro);
-            }, 1000);
-        }
-        // LOGIC 3: COMFORT (Smart AI)
-        else if (lower.includes("help") || lower.includes("coming") || lower.includes("way") || lower.includes("calm")) {
-            setTimeout(() => {
-                const resp = "Okay, thank you! Please hurry, I'm scared!";
-                addMsg('caller', resp);
-                speak(resp);
-            }, 1000);
-        }
-    }
-
-    // --- MAP WITH ROADS ---
-    const canvas = document.getElementById('map-canvas');
-    const ctx = canvas.getContext('2d');
-    let radarAngle = 0;
-
-    function drawMap() {
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = canvas.parentElement.clientHeight;
-        const w = canvas.width; 
-        const h = canvas.height;
-
-        ctx.fillStyle = "#050b14";
-        ctx.fillRect(0, 0, w, h);
-
-        // DRAW ROADS (Random looking paths)
-        ctx.strokeStyle = "#334155";
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        // Main Highways
-        ctx.moveTo(0, h*0.4); ctx.lineTo(w, h*0.4); 
-        ctx.moveTo(w*0.3, 0); ctx.lineTo(w*0.3, h);
-        ctx.moveTo(w*0.7, 0); ctx.lineTo(w*0.7, h);
-        // Cross Streets
-        ctx.moveTo(0, h*0.8); ctx.lineTo(w*0.5, h*0.8);
-        ctx.stroke();
-
-        // Grid Overlay
-        ctx.strokeStyle = "rgba(30, 41, 59, 0.5)";
-        ctx.lineWidth = 1;
-        for(let x=0; x<w; x+=40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-        for(let y=0; y<h; y+=40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
-
-        // Radar Sweep
-        radarAngle += 0.02;
-        ctx.strokeStyle = "rgba(56, 189, 248, 0.2)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(w/2, h/2);
-        ctx.lineTo(w/2 + Math.cos(radarAngle)*w, h/2 + Math.sin(radarAngle)*h);
-        ctx.stroke();
-
-        // Map Target
-        if (mapTarget) {
-            const tx = mapTarget.x * w;
-            const ty = mapTarget.y * h;
-            
-            ctx.fillStyle = "#ef4444";
-            ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI*2); ctx.fill();
-            
-            ctx.strokeStyle = `rgba(239, 68, 68, ${Math.abs(Math.sin(Date.now()/300))})`;
-            ctx.beginPath(); ctx.arc(tx, ty, 20, 0, Math.PI*2); ctx.stroke();
-            
-            ctx.fillStyle = "#fff";
-            ctx.font = "12px monospace";
-            ctx.fillText("INCIDENT", tx + 12, ty + 4);
-        }
-        requestAnimationFrame(drawMap);
-    }
-    drawMap(); 
-</script>
+<script src="script.js"></script>
 </body>
 </html>
