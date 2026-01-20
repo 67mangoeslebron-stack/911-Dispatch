@@ -2,105 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEON SECTOR // V148</title>
+    <title>PARKVIEW CAD - DISPATCH HUB V150</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="boot-screen" class="overlay">
-        <div class="login-box">
-            <h1 class="glitch" data-text="SECTOR 4">SECTOR 4</h1>
-            <p>CAD SYSTEM V148.2</p>
-            <div class="warning-box">
-                WARNING: AUDIO DRIVERS UNSTABLE.<br>
-                VERIFY ADDRESS VISUALLY.<br>
-                USE VOICE COMMANDS TO DISPATCH.
-            </div>
-            <button class="big-btn" onclick="initSystem()">INITIALIZE SHIFT</button>
+    <div id="login-screen" class="modal-overlay">
+        <div class="system-box">
+            <h2>PARKVIEW COUNTY 911</h2>
+            <p>DISPATCH TERMINAL V150</p>
+            <button class="primary-btn" onclick="startSystem()">INITIALIZE HUB</button>
         </div>
     </div>
 
-    <div class="container">
-        <div class="panel">
-            <div class="header">
-                <span>INCIDENT DATA</span>
-                <span id="clock" class="terminal-green">19:42:00</span>
+    <div class="cad-container">
+        
+        <div class="panel dispatch-hub">
+            <div class="panel-header">
+                <span>FLEET STATUS HUB</span>
+                <span id="clock">00:00</span>
             </div>
 
-            <div id="active-call-box" class="call-box hidden">
-                <div class="data-row">
-                    <span class="lbl">SOURCE</span>
-                    <span id="c-source" class="val">--</span>
+            <div class="unit-grid-header">
+                <span>UNIT</span><span>LOCATION</span><span>STATUS</span>
+            </div>
+            <div id="unit-list" class="unit-list">
                 </div>
-                <div class="data-row">
-                    <span class="lbl">LOCATION</span>
-                    <span id="c-loc" class="val flash-slow">LOCATING...</span>
-                </div>
-                <div class="data-row">
-                    <span class="lbl">DETAILS</span>
-                    <div id="c-details" class="log-text">--</div>
-                </div>
-                <hr class="dim">
-                <div id="sms-interface" class="hidden">
-                    <div id="sms-history"></div>
-                    <input type="text" id="sms-input" placeholder="TYPE RESPONSE..." disabled>
+
+            <div class="panel-header" style="margin-top:15px;">ACTIVE INCIDENT</div>
+            <div id="incident-container">
+                <div id="no-call" class="placeholder">NO PENDING CALLS</div>
+                <div id="incident-card" class="card hidden">
+                    <div class="card-row"><label>TYPE</label><span id="inc-type" class="val-red">--</span></div>
+                    <div class="card-row"><label>ADDRESS</label><span id="inc-loc" class="val-bold">--</span></div>
+                    <div id="sms-area" class="hidden">
+                        <div id="sms-log"></div>
+                        <input type="text" id="sms-input" placeholder="Type SMS response...">
+                    </div>
                 </div>
             </div>
 
-            <div class="status-panel">
-                <div class="header">UNIT STATUS</div>
-                <div class="unit-row" id="u-pd1">
-                    <span class="u-name">PD-01</span>
-                    <span class="u-stat">PATROL</span>
-                </div>
-                <div class="unit-row" id="u-pd2">
-                    <span class="u-name">PD-02</span>
-                    <span class="u-stat">PATROL</span>
-                </div>
-                <div class="unit-row" id="u-med1">
-                    <span class="u-name">MED-1</span>
-                    <span class="u-stat">STATION</span>
-                </div>
+            <div class="hub-footer">
+                <button class="trigger-btn" onclick="triggerIncident()">[GENERATE 911 CALL]</button>
             </div>
         </div>
 
-        <div class="map-wrapper">
-            <div class="vignette"></div>
-            <div class="scan-line"></div>
+        <div class="map-container">
+            <div id="mic-indicator" class="mic-hud hidden">
+                <div class="pulse-red"></div>
+                <span id="mic-label">PTT ACTIVE: SPEAK NOW</span>
+            </div>
             
-            <div id="alert-modal" class="call-modal hidden">
-                <h2 class="flash">INCOMING TRAFFIC</h2>
-                <div id="alert-type">PRIORITY 1</div>
-                <button class="big-btn" onclick="acceptCall()">CONNECT</button>
-            </div>
-
-            <div id="mic-viz" class="mic-viz hidden">
-                <div class="mic-label">TRANSMITTING... (SPEAK NOW)</div>
-                <div class="freq-bars">
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div>
+            <div id="incoming-modal" class="alert-modal hidden">
+                <div class="alert-inner">
+                    <h2 class="blink">911 LINE ACTIVE</h2>
+                    <p id="alert-desc">VOICE CALL INCOMING</p>
+                    <button class="accept-btn" onclick="acceptCall()">ACCEPT TRANSMISSION</button>
                 </div>
-                <div id="voice-command-text" style="color:white; font-size:10px; margin-top:5px;"></div>
             </div>
 
-            <canvas id="map"></canvas>
+            <canvas id="cad-map"></canvas>
         </div>
 
-        <div class="panel-right">
-            <div class="header">RADIO LOG</div>
-            <div id="game-log" class="log">
-                <div class="msg sys">SYSTEM: VOICE RECOGNITION ACTIVE.</div>
-                <div class="msg sys">HOLD [SPACEBAR] TO TALK.</div>
-                <div class="msg sys">CMD: "[UNIT NAME] RESPOND"</div>
-            </div>
+        <div class="panel logs-panel">
+            <div class="panel-header">RADIO/CAD LOG</div>
+            <div id="system-log" class="log-entries"></div>
             
-            <div class="sticky">
-                <u>SECTOR NOTES:</u><br>
-                - Mic cuts out near prison.<br>
-                - Walmart is 400 blk.<br>
-                - <b>MINIMUM CALL TIME: 3 MIN</b><br>
-                - Do NOT clear units early.
+            <div class="sticky-note">
+                <strong>DISPATCH CODES:</strong><br>
+                - "[Unit] Respond" (Dispatch)<br>
+                - "[Unit] Clear" (Reset)<br>
+                - Air-1: Jail Roof Access only.
             </div>
         </div>
     </div>
