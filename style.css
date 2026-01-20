@@ -1,69 +1,36 @@
-:root { 
-    --bg: #050505; 
-    --term: #00ff41; 
-    --dim: #004411; 
-    --alert: #ff3333; 
-    --road: #1a1a1a;
-    --hwy: #2a2a2a;
+body {
+    margin: 0; font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f4f7f6; color: #2c3e50; height: 100vh; overflow: hidden;
 }
 
-body { 
-    margin: 0; background: var(--bg); color: var(--term); 
-    font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; 
-    text-transform: uppercase; user-select: none;
-}
+.cad-container { display: grid; grid-template-columns: 350px 1fr 300px; height: 100vh; }
 
-.container { display: grid; grid-template-columns: 350px 1fr 300px; height: 100%; }
-.panel, .panel-right { padding: 15px; border-right: 1px solid var(--dim); display: flex; flex-direction: column; background: #000900; }
-.panel-right { border-left: 1px solid var(--dim); border-right: none; }
+/* PANELS */
+.panel { background: #fff; border-right: 1px solid #cfd8dc; display: flex; flex-direction: column; padding: 10px; }
+.panel-header { background: #263238; color: #fff; padding: 10px; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; border-radius: 2px; }
 
-/* MAP & VIGNETTE */
-.map-wrapper { position: relative; background: #080808; overflow: hidden; cursor: crosshair; }
+/* HUB UNIT LIST */
+.unit-grid-header { display: grid; grid-template-columns: 60px 1fr 80px; padding: 5px; font-size: 10px; font-weight: bold; border-bottom: 2px solid #eee; margin-top: 5px; }
+.u-entry { display: grid; grid-template-columns: 60px 1fr 80px; padding: 10px 5px; border-bottom: 1px solid #f0f0f0; font-size: 12px; align-items: center; }
+.status-pill { padding: 2px 5px; border-radius: 3px; font-size: 10px; font-weight: bold; text-align: center; }
+.s-avail { background: #e8f5e9; color: #2e7d32; }
+.s-busy { background: #ffebee; color: #c62828; }
+.s-enroute { background: #fff3e0; color: #ef6c00; border: 1px solid #ef6c00; }
+
+/* INCIDENT CARD */
+.card { border-left: 5px solid #c62828; padding: 10px; background: #fafafa; margin-top: 10px; }
+.val-red { color: #c62828; font-weight: bold; }
+.val-bold { font-weight: bold; display: block; }
+.trigger-btn { width: 100%; padding: 12px; background: #37474f; color: #fff; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
+
+/* MAP */
+.map-container { position: relative; background: #e0e0e0; }
 canvas { display: block; width: 100%; height: 100%; }
-.vignette {
-    position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(circle, transparent 50%, #000 95%);
-    box-shadow: inset 0 0 100px #000;
-}
-.scan-line {
-    position: absolute; top: 0; left: 0; width: 100%; height: 5px;
-    background: rgba(0, 255, 65, 0.1);
-    animation: scan 4s linear infinite; pointer-events: none;
-}
-
-/* UI ELEMENTS */
-.header { border-bottom: 2px solid var(--dim); padding-bottom: 5px; margin-bottom: 10px; font-weight: bold; display: flex; justify-content: space-between; }
-.unit-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--dim); }
-.unit-row.busy { color: #aaaaaa; }
-.unit-row.enroute { color: var(--alert); animation: pulse 2s infinite; }
-
-/* SMS INTERFACE */
-#sms-interface { margin-top: 10px; border: 1px solid var(--dim); padding: 5px; height: 150px; display: flex; flex-direction: column; }
-#sms-history { flex: 1; overflow-y: auto; font-size: 11px; color: cyan; margin-bottom: 5px; }
-#sms-input { background: #000; border: none; border-top: 1px solid var(--dim); color: var(--term); padding: 5px; font-family: inherit; }
-
-/* MIC VIZ */
-.mic-viz {
-    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-    background: rgba(0, 20, 0, 0.9); border: 1px solid var(--term);
-    padding: 10px; text-align: center; border-radius: 4px; z-index: 100;
-}
-.freq-bars { display: flex; gap: 3px; height: 20px; justify-content: center; margin-top: 5px; }
-.bar { width: 5px; background: var(--term); height: 100%; animation: wave 0.5s infinite; }
 
 /* LOGS */
-.log { flex: 1; overflow-y: auto; font-size: 12px; }
-.msg { margin-bottom: 4px; padding-left: 5px; border-left: 2px solid transparent; }
-.msg.sys { color: #666; }
-.msg.radio { border-color: var(--term); color: var(--term); }
-.msg.call { border-color: var(--alert); color: #fff; }
+.log-entries { flex: 1; font-family: monospace; font-size: 11px; overflow-y: auto; padding: 5px; background: #fff; border: 1px solid #eee; }
+.sticky-note { background: #fffde7; padding: 10px; border: 1px solid #fff59d; font-size: 11px; margin-top: 10px; }
 
 .hidden { display: none !important; }
-.overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-.login-box { text-align: center; border: 2px solid var(--term); padding: 40px; }
-.big-btn { background: var(--term); border: none; padding: 15px 30px; font-weight: bold; font-size: 18px; margin-top: 20px; cursor: pointer; }
-.big-btn:hover { background: #fff; }
-
-@keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
-@keyframes pulse { 50% { opacity: 0.5; } }
-@keyframes wave { 0%, 100% { height: 20%; } 50% { height: 100%; } }
+.blink { animation: blnk 1s infinite; }
+@keyframes blnk { 50% { opacity: 0; } }
